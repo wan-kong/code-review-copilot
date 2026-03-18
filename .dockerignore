@@ -1,0 +1,10 @@
+node_modules
+.next
+.git
+.gitignore
+*.md
+dev.db
+dev.db-journal
+.env
+.env.local
+.env.*.local
