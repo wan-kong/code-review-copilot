@@ -8,10 +8,10 @@
 
 /** 问题严重等级枚举 */
 export const SEVERITY = {
-  CRITICAL: '严重',
-  NORMAL: '一般',
-  SUGGESTION: '建议',
-} as const
+    CRITICAL: "严重",
+    NORMAL: "一般",
+    SUGGESTION: "建议",
+} as const;
 
 /** 系统提示词：定义 AI 角色和输出格式 */
 export const SYSTEM_PROMPT = `你是一名专业代码审查助手。请仅针对代码变更进行审查。
@@ -37,12 +37,12 @@ export const SYSTEM_PROMPT = `你是一名专业代码审查助手。请仅针�
 - 不要输出代码块，不要输出 JSON，不要添加多余前后缀说明。
 
 除此之外的审查内容，可遵循仓库自定义提示词（如有）。
-`
+`;
 
 /** 基础输出格式要求（用于替换模式，确保解析器可以正确解析） */
 export const OUTPUT_FORMAT = `
 【输出格式要求】
-必须包含统计行（完全匹配此格式）：统计: 严重=<n> 一般=<n> 建议=<n>`
+必须包含统计行（完全匹配此格式）：统计: 严重=<n> 一般=<n> 建议=<n>`;
 
 /** 生成变更摘要专用系统提示词（不要求统计行） */
 export const SUMMARY_SYSTEM_PROMPT = `你是一名专业的代码变更总结助手。
@@ -53,7 +53,7 @@ export const SUMMARY_SYSTEM_PROMPT = `你是一名专业的代码变更总结助
 格式要求：
 - 使用标题 "### 高层总结" 和 "### 技术走查"
 - 技术走查使用短条目，每条尽量具体到文件或模块
-- 不要输出统计行，不要列审查问题清单，不要输出代码块。`
+- 不要输出统计行，不要列审查问题清单，不要输出代码块。`;
 
 /**
  * 构建代码审查提示词
@@ -65,22 +65,22 @@ export const SUMMARY_SYSTEM_PROMPT = `你是一名专业的代码变更总结助
  * @param params.summary - 变更概要
  */
 export function buildReviewPrompt(params: {
-  title: string
-  description?: string
-  filename: string
-  diff: string
-  summary?: string
+    title: string;
+    description?: string;
+    filename: string;
+    diff: string;
+    summary?: string;
 }): string {
-  const parts = [
-    params.title ? `【变更主题】${params.title}` : '',
-    params.summary ? `【概要】${params.summary}` : '',
-    params.description ? `【描述】${params.description}` : '',
-    `【文件】${params.filename}`,
-    '```diff',
-    params.diff,
-    '```',
-  ]
-  return parts.filter(Boolean).join('\n')
+    const parts = [
+        params.title ? `【变更主题】${params.title}` : "",
+        params.summary ? `【概要】${params.summary}` : "",
+        params.description ? `【描述】${params.description}` : "",
+        `【文件】${params.filename}`,
+        "```diff",
+        params.diff,
+        "```",
+    ];
+    return parts.filter(Boolean).join("\n");
 }
 
 /**
@@ -91,26 +91,27 @@ export function buildReviewPrompt(params: {
  * @param params.diffs - 所有 diff 内容
  */
 export function buildSummaryPrompt(params: {
-  title: string
-  description?: string
-  diffs: string
-  reviewScope?: 'full' | 'incremental'
-  baseCommitSha?: string | null
-  headCommitSha?: string
+    title: string;
+    description?: string;
+    diffs: string;
+    reviewScope?: "full" | "incremental";
+    baseCommitSha?: string | null;
+    headCommitSha?: string;
 }): string {
-  const scopeText = params.reviewScope === 'incremental'
-    ? `增量审查（从 ${params.baseCommitSha || 'unknown'} 到 ${params.headCommitSha || 'current'}）`
-    : '全量审查（MR/Commit 当前完整变更）'
+    const scopeText =
+        params.reviewScope === "incremental"
+            ? `增量审查（从 ${params.baseCommitSha || "unknown"} 到 ${params.headCommitSha || "current"}）`
+            : "全量审查（MR/Commit 当前完整变更）";
 
-  return `请按要求总结以下代码变更：
+    return `请按要求总结以下代码变更：
 
 ## ${params.title}
-${params.description || ''}
+${params.description || ""}
 审查范围：${scopeText}
 
 \`\`\`diff
 ${params.diffs}
-\`\`\``
+\`\`\``;
 }
 
 /**
@@ -118,25 +119,29 @@ ${params.diffs}
  * @param params - 批量审查参数
  */
 export function buildBatchReviewPrompt(params: {
-  title: string
-  description?: string
-  files: Array<{ path: string; diff: string }>
-  fileCount: number
+    title: string;
+    description?: string;
+    files: Array<{ path: string; diff: string }>;
+    fileCount: number;
 }): string {
-  const fileSummary = params.files.map(f => `- ${f.path}`).join('\n')
+    const fileSummary = params.files.map((f) => `- ${f.path}`).join("\n");
 
-  return `请基于以下代码变更进行审查（${params.fileCount} 个文件）。请遵循系统提示词中的“总结优先 + 统计 + 仅展开严重问题”的输出要求。
+    return `请基于以下代码变更进行审查（${params.fileCount} 个文件）。请遵循系统提示词中的“总结优先 + 统计 + 仅展开严重问题”的输出要求。
 
 【变更主题】${params.title}
-${params.description ? `【描述】${params.description}\n` : ''}
+${params.description ? `【描述】${params.description}\n` : ""}
 
 【变更文件列表】
 ${fileSummary}
 
 【代码变更】
-${params.files.map(f => `
+${params.files
+    .map(
+        (f) => `
 ### ${f.path}
 \`\`\`diff
 ${f.diff}
-\`\`\``).join('\n')}`
+\`\`\``,
+    )
+    .join("\n")}`;
 }
