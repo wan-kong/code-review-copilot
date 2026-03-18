@@ -9,41 +9,46 @@
  */
 
 import { prisma } from "@/lib/prisma";
-import { aiService } from "@/lib/services/ai";
 import { buildSummaryPrompt, SUMMARY_SYSTEM_PROMPT } from "@/lib/prompts";
+import { aiService } from "@/lib/services/ai";
 import type { ReviewState } from "../types";
 
 /**
  * 生成变更摘要节点
  */
-export async function generateSummaryNode(state: ReviewState): Promise<Partial<ReviewState>> {
-  console.log(`📝 [GenerateSummaryNode] Generating change summary`);
+export async function generateSummaryNode(
+    state: ReviewState,
+): Promise<Partial<ReviewState>> {
+    console.log(`📝 [GenerateSummaryNode] Generating change summary`);
 
-  const allDiffsText = state.diffs.map((d) => d.diff).join("\n");
-  const summaryPrompt = buildSummaryPrompt({
-    title: state.mrInfo?.title || state.reviewLog?.title || "",
-    description: state.mrInfo?.description || state.reviewLog?.description || "",
-    diffs: allDiffsText,
-    reviewScope: state.reviewScope,
-    baseCommitSha: state.incrementalBaseSha,
-    headCommitSha: state.reviewLog?.commitSha,
-  });
+    const allDiffsText = state.diffs.map((d) => d.diff).join("\n");
+    const summaryPrompt = buildSummaryPrompt({
+        title: state.mrInfo?.title || state.reviewLog?.title || "",
+        description:
+            state.mrInfo?.description || state.reviewLog?.description || "",
+        diffs: allDiffsText,
+        reviewScope: state.reviewScope,
+        baseCommitSha: state.incrementalBaseSha,
+        headCommitSha: state.reviewLog?.commitSha,
+    });
 
-  const summary = await aiService.reviewCode(
-    summaryPrompt,
-    state.modelConfig,
-    SUMMARY_SYSTEM_PROMPT,
-  );
+    const summary = await aiService.reviewCode(
+        summaryPrompt,
+        state.modelConfig,
+        SUMMARY_SYSTEM_PROMPT,
+    );
 
-  console.log(`✅ [GenerateSummaryNode] Summary generated: ${summary.slice(0, 100)}...`);
+    console.log(
+        `✅ [GenerateSummaryNode] Summary generated: ${summary.slice(0, 100)}...`,
+    );
 
-  // 保存摘要到数据库
-  await prisma.reviewLog.update({
-    where: { id: state.reviewLogId },
-    data: { aiSummary: summary },
-  });
+    // 保存摘要到数据库
+    await prisma.reviewLog.update({
+        where: { id: state.reviewLogId },
+        data: { aiSummary: summary },
+    });
 
-  return {
-    summary,
-  };
+    return {
+        summary,
+    };
 }
